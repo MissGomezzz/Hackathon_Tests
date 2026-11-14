@@ -1,8 +1,8 @@
 # Hackathon Tests
 
-# Autora: Ángela Gómez
+## Autora: Ángela Gómez
 
-**Nota**: Debido a la complejidad de algunos ejercicios, el código fue retroalimentado por Claude (hace mucho no programo en Python para este tipo de ejercicios)
+**Nota**: Debido a la complejidad de algunos ejercicios, el código fue retroalimentado por Claude (hace mucho no programo en Python para este tipo de ejercicios a pesar de entender la teoría)
 
 ## Cómo ejecutar cualquier ejercicio
 
@@ -111,97 +111,151 @@ si no:                 m = min(mejor[k] para k hijo de i)
 
 ## Algunas evidencias del ejercicio
 
+![Google-A](/img/1.png)
+
+
+![Google-B](/img/2.png)
+
+
+![Google-C](/img/3.png)
+
+
+![Google-D](/img/4.png)
+
+
+![Google-E](/img/5.png)
 
 ---
 
 # Parte 2: Prueba Anthropic (API de Claude)
 
-> Sección preparada.
-
-Resumen de los cinco ejercicios:
 
 | Ejercicio | Tema | Técnica principal | Estructura de datos | Complejidad |
 |---|---|---|---|---|
-| A. Respuesta en streaming | Streaming (eventos SSE) | Máquina de estados sobre eventos | _pendiente_ | _pendiente_ |
-| B. Uso de herramientas | Tool use | Despachador de herramientas | _pendiente_ | _pendiente_ |
-| C. Costos con caché | Prompt caching y precios | Aritmética entera en millonésimas de dólar | _pendiente_ | _pendiente_ |
-| D. Límites de velocidad | Rate limits | Cubeta de tokens (token bucket) | _pendiente_ | _pendiente_ |
-| E. Evaluación de respuestas | Evals calificadas con código | Normalización + coincidencia de palabras completas | _pendiente_ | _pendiente_ |
+| A. Respuesta en streaming | Streaming (eventos SSE) | Máquina de estados sobre eventos | Diccionario `index -> texto` | O(n), n = líneas de la entrada |
+| B. Uso de herramientas | Tool use | Despacho por nombre de herramienta | Diccionarios (ciudades, herramientas) y contadores | O(n), n = llamadas a herramientas |
+| C. Costos con caché | Prompt caching y precios | Aritmética entera con precios x100 | Enteros y contadores | O(n), n = solicitudes |
+| D. Límites de velocidad | Rate limits | Cubeta de tokens (token bucket) | Dos cubetas (tokens y última marca de tiempo) | O(n), n = solicitudes |
+| E. Evaluación de respuestas | Evals calificadas con código | Normalización + coincidencia de palabras completas | Diccionario categoría -> [aprobadas, total] | O(L), L = caracteres totales |
 
 ---
 
 ## A. Respuesta en streaming
 
-**Problema.** Reconstruir mensajes completos a partir de eventos `event:` / `data:` (streaming) e imprimir `texto`, `stop_reason`, `input_tokens` y `output_tokens` al llegar `message_stop`.
+**Qué se pide.** Reconstruir cada mensaje a partir de los eventos `event:` / `data:` e imprimir `texto`, `stop_reason`, `input_tokens` y `output_tokens`.
 
-**Algoritmo / técnica:** _pendiente_ (procesar los eventos en orden; `message_start` da `input_tokens`, cada `content_block_delta` con `text_delta` agrega texto al bloque de su `index`, `message_delta` da `stop_reason` y `output_tokens`, `ping` se ignora).
+**Técnica.** Máquina de estados: se procesa cada evento en orden y se actúa según su tipo.
 
-**Estructura de datos:** _pendiente_ (por ejemplo, un diccionario `index -> texto` para unir los bloques en orden).
+| Evento | Acción |
+|---|---|
+| `message_start` | Reinicia el mensaje y guarda `usage.input_tokens` |
+| `content_block_delta` (`text_delta`) | Agrega el texto al bloque de su `index` |
+| `message_delta` | Guarda `stop_reason` y `usage.output_tokens` |
+| `ping` | Se ignora |
+| `message_stop` | Imprime las 4 líneas del mensaje |
 
-**Complejidad:** _pendiente_.
+**Detalle clave.** El texto final es la unión de los bloques **ordenados por `index`**. La línea `data:` se lee como JSON.
 
-**Evidencias:**
-![Ejemplo A Anthropic](img/anthropic_A_ejemplo.png)
-![Entrada oficial A Anthropic](img/anthropic_A_oficial.png)
+**Estructura de datos.** Diccionario `index -> texto` por mensaje, más variables para `stop_reason` y los tokens.
 
 ---
 
 ## B. Uso de herramientas
 
-**Problema.** Por cada respuesta con `stop_reason: tool_use`, ejecutar las herramientas pedidas (`calculadora`, `clima`) en orden e imprimir `tool_result <id> <resultado>`; con `end_turn` imprimir `final:` y el resumen de llamadas y errores.
+**Qué se pide.** Cada línea es una respuesta del modelo. Con `tool_use` se ejecutan las herramientas pedidas y se imprime `tool_result <id> <resultado>`; con `end_turn` se imprime `final: <texto>`. Al final, `resumen: N llamadas, E errores`.
 
-**Algoritmo / técnica:** _pendiente_ (despacho por nombre de herramienta y manejo de errores).
+**Técnica.** Despacho por nombre: según `name` se llama a la función que corresponde.
 
-**Estructura de datos:** _pendiente_ (por ejemplo, diccionario de ciudades y temperaturas, contadores de llamadas y errores).
+| Herramienta | Regla |
+|---|---|
+| `calculadora` | `sumar`, `restar`, `multiplicar`, `dividir` (entera) sobre `a` y `b` |
+| `clima` | Bogotá 14, Medellín 24, Cali 26, con formato `24 °C` |
 
-**Complejidad:** _pendiente_.
+**Errores (cuentan para el resumen).**
+- Dividir por cero: `error: división por cero`.
+- Operación inválida: `error: operación desconocida: X`.
+- Ciudad inválida: `error: ciudad desconocida: X`.
+- Herramienta inválida: `error: herramienta desconocida: X`.
 
-**Evidencias:**
-![Ejemplo B Anthropic](img/anthropic_B_ejemplo.png)
-![Entrada oficial B Anthropic](img/anthropic_B_oficial.png)
+**Detalle clave.** Un mismo mensaje puede traer varios bloques `tool_use`: se ejecutan en orden y se ignoran los bloques de tipo `text`. Una llamada es un error si su resultado empieza con `error:`.
+
+**Estructura de datos.** Diccionario de ciudades a temperatura, diccionario de herramientas disponibles y dos contadores (llamadas y errores).
 
 ---
 
 ## C. Costos con caché de prompts
 
-**Problema.** Calcular el costo de cada llamada con precios de ejemplo ($3 por millón de entrada, $15 por millón de salida, escritura en caché 1,25x y lectura 0,1x), y el total, el costo sin caché, el ahorro y los aciertos de caché.
+**Qué se pide.** Costo de cada llamada con $3 por millón de tokens de entrada y $15 por millón de salida. Escribir en caché cuesta 1,25 veces la entrada y leer de caché, 0,1 veces. Se imprime cada solicitud, el total, el costo sin caché, el ahorro y los aciertos de caché.
 
-**Algoritmo / técnica:** _pendiente_ (aritmética con enteros en millonésimas de dólar para evitar errores de redondeo con flotantes).
+**Técnica.** Todo en enteros, en millonésimas de dólar, para evitar errores de redondeo con decimales. Para que los precios por token sean enteros se multiplican por 100 y se divide entre 100 al final:
 
-**Estructura de datos:** _pendiente_.
+| Concepto | Precio por token (x100) |
+|---|---|
+| Entrada normal | 300 |
+| Escritura en caché | 375 |
+| Lectura de caché | 30 |
+| Salida | 1500 |
 
-**Complejidad:** _pendiente_.
+**Fórmulas.**
 
-**Evidencias:**
-![Ejemplo C Anthropic](img/anthropic_C_ejemplo.png)
-![Entrada oficial C Anthropic](img/anthropic_C_oficial.png)
+```
+costo     = (input*300 + creacion*375 + lectura*30 + salida*1500) // 100
+sin_cache = (input + creacion + lectura)*3 + salida*15
+ahorro    = sin_cache - total
+aciertos  = llamadas con cache_read_input_tokens > 0
+```
+
+**Formato.** Para imprimir sin usar decimales flotantes: `f"${m // 1_000_000}.{m % 1_000_000:06d}"`.
+
+**Estructura de datos.** Solo enteros acumuladores (`total`, `sin_cache`, `aciertos`).
 
 ---
 
 ## D. Límites de velocidad
 
-**Problema.** Simular una cubeta de tokens para solicitudes (capacidad 3, recarga 1/s) y tokens de entrada (capacidad 100, recarga 20/s), respondiendo `ok` o `429 retry-after=N`. Los tokens leídos de caché no cuentan.
+**Qué se pide.** Para cada `REQUEST t nuevos de_cache`, responder `ok` o `429 retry-after=N`.
 
-**Algoritmo / técnica:** _pendiente_ (token bucket con recarga proporcional al tiempo transcurrido y espera calculada con redondeo hacia arriba).
+**Técnica.** Dos cubetas de tokens que se recargan de forma continua:
 
-**Estructura de datos:** _pendiente_ (estado de ambas cubetas y la última marca de tiempo).
+| Cubeta | Capacidad | Recarga |
+|---|---|---|
+| Solicitudes | 3 | 1 por segundo |
+| Tokens de entrada | 100 | 20 por segundo |
 
-**Complejidad:** _pendiente_.
+Ambas empiezan llenas.
 
-**Evidencias:**
-![Ejemplo D Anthropic](img/anthropic_D_ejemplo.png)
-![Entrada oficial D Anthropic](img/anthropic_D_oficial.png)
+**Reglas.**
+1. Al llegar una solicitud en el segundo `t`, se recargan las dos cubetas: `tokens = min(capacidad, tokens + recarga * (t - ultima_marca))`.
+2. Si hay al menos 1 solicitud disponible y `nuevos` tokens disponibles, se gastan y se responde `ok`.
+3. Si no alcanza, **no se gasta nada** y se responde `429 retry-after=N`, con `N = max(ceil((1 - solicitudes) / 1), ceil((nuevos - tokens) / 20))`.
+4. Los tokens `de_cache` se ignoran: no gastan.
+
+**Detalle clave.** El `ceil` se hace con enteros: `-(-a // b)`. La recarga se aplica en cada línea, aunque la respuesta sea 429.
+
+**Estructura de datos.** Dos cubetas con su nivel actual y una marca de tiempo compartida de la última recarga.
 
 ---
 
 ## E. Evaluación de respuestas
 
-**Problema.** Normalizar respuesta y esperado (minúsculas, sin tildes, todo lo que no sea letra o número pasa a espacio) y aprobar si lo esperado aparece como palabras completas. Imprimir aprobadas/total por categoría (orden alfabético) y el total con un decimal.
+**Qué se pide.** Una respuesta pasa si lo esperado aparece como palabras completas dentro de la respuesta, tras normalizar ambas. Se imprime `categoria: aprobadas/total` en orden alfabético y `total: a/n (p%)`.
 
-**Algoritmo / técnica:** _pendiente_ (normalización Unicode y búsqueda de subcadena delimitada por espacios).
+**Técnica.** Normalización + búsqueda de palabras completas.
 
-**Estructura de datos:** _pendiente_ (diccionario de categoría a contadores).
+1. **Normalizar:** pasar a minúsculas, quitar tildes (`unicodedata.normalize("NFD", ...)` y eliminar las marcas combinantes), reemplazar todo lo que no sea letra o número por un espacio y colapsar los espacios.
+2. **Comparar con espacios en los bordes:** `" " + esperado + " "` debe estar dentro de `" " + respuesta + " "`. Así `42` no pasa con `420`.
 
-**Complejidad:** _pendiente_.
+**Resultado.** El porcentaje se imprime con un decimal: `f"{a * 100 / n:.1f}"`.
+
+**Estructura de datos.** Diccionario `categoria -> [aprobadas, total]`; las categorías se imprimen con `sorted()`.
 
 ---
+
+## Algunas evidencias del ejercicio
+
+
+
+
+
+
+

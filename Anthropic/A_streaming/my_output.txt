@@ -1,0 +1,24 @@
+texto: con en tinto mañana con mañana está la ¡vamos! ¡vamos! Bogotá
+stop_reason: max_tokens
+input_tokens: 1676
+output_tokens: 169
+texto: datos servidor sin calma gracias despacio código la hola
+stop_reason: max_tokens
+input_tokens: 599
+output_tokens: 190
+texto: lista café tinto servidor responde café responde con claude el la gracias errores rápido café con modelo prueba está ¡vamos! mañana
+stop_reason: stop_sequence
+input_tokens: 3340
+output_tokens: 327
+texto: responde calma mañana café en gracias responde calma gracias lloverá con en café servidor ¡vamos!
+stop_reason: stop_sequence
+input_tokens: 1958
+output_tokens: 363
+texto: compila compila con café café rápido servidor ¿listo? mañana
+stop_reason: end_turn
+input_tokens: 2713
+output_tokens: 389
+texto: código tinto código ¡vamos! sin respuesta responde Bogotá el
+stop_reason: max_tokens
+input_tokens: 2104
+output_tokens: 302

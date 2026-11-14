@@ -2,7 +2,7 @@
 
 ## Autora: Ángela Gómez
 
-**Nota**: Debido a la complejidad de algunos ejercicios, el código fue retroalimentado por Claude (hace mucho no programo en Python para este tipo de ejercicios a pesar de entender la teoría)
+**Nota**: Debido a la complejidad de algunos ejercicios y la falta de experiencia con el tipo de preguntas de la sección de Anthropic, parte del código fue retroalimentado por Claude 
 
 ## Cómo ejecutar cualquier ejercicio
 
@@ -253,9 +253,15 @@ Ambas empiezan llenas.
 
 ## Algunas evidencias del ejercicio
 
+![Anthropic-A](/img/6.png)
+
+![Anthropic-B](/img/7.png)
+
+![Anthropic-C](/img/8.png)
+
+![Anthropic-D](/img/9.png)
+
+![Anthropic-E](/img/10.png)
 
 
-
-
-
-
+---

@@ -1,0 +1,22 @@
+tool_result toolu_01 error: herramienta desconocida: correo
+tool_result toolu_02 error: ciudad desconocida: Tunja
+tool_result toolu_03 error: herramienta desconocida: buscar_web
+tool_result toolu_04 1196
+tool_result toolu_05 1251
+tool_result toolu_06 7
+tool_result toolu_07 error: ciudad desconocida: Pasto
+tool_result toolu_08 1058
+tool_result toolu_09 14 °C
+tool_result toolu_10 26 °C
+tool_result toolu_11 1750
+tool_result toolu_12 884
+tool_result toolu_13 953
+tool_result toolu_14 567120
+tool_result toolu_15 0
+tool_result toolu_16 3
+tool_result toolu_17 error: ciudad desconocida: Tunja
+tool_result toolu_18 24 °C
+tool_result toolu_19 29785
+tool_result toolu_20 error: operación desconocida: potencia
+final: Listo, revisé 20 resultados.
+resumen: 20 llamadas, 6 errores

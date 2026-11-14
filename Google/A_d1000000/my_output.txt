@@ -1,0 +1,10 @@
+Case #1: 442
+Case #2: 735
+Case #3: 346
+Case #4: 628
+Case #5: 348
+Case #6: 567
+Case #7: 434
+Case #8: 266
+Case #9: 330
+Case #10: 751
